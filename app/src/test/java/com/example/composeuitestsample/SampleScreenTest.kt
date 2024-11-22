@@ -1,8 +1,11 @@
 package com.example.composeuitestsample
 
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.printToString
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.composeuitestsample.ui.SampleScreen
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
@@ -21,11 +24,24 @@ class SampleScreenTest {
 
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
     @Test
-    fun show_text() {
+    fun verify_merged_tree() {
         composeTestRule.setContent {
             SampleScreen()
         }
-        composeTestRule.onNodeWithText("sample")
+        println(composeTestRule.onRoot().printToString()) // userUnmergedTree = false by default
+        println(composeTestRule.onRoot(useUnmergedTree = true).printToString())
+
+        // ok
+        composeTestRule.onNode(hasText("sample"), useUnmergedTree = true)
+            .performClick()
+        // ok
+        composeTestRule.onNode(hasText("sample"), useUnmergedTree = false)
+            .performClick()
+        // NG
+//        composeTestRule.onNode(hasTestTag("sample"))
+//            .performClick()
+        composeTestRule.onNode(hasTestTag("sample"), useUnmergedTree = true)
+            .performClick()
 
         composeTestRule.onRoot()
             .captureRoboImage()
