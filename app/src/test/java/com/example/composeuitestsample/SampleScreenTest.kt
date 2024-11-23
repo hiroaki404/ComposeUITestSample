@@ -1,5 +1,7 @@
 package com.example.composeuitestsample
 
+import android.os.Looper
+import android.os.SystemClock
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -14,11 +16,17 @@ import com.example.composeuitestsample.ui.SampleScreenContent
 import com.example.composeuitestsample.ui.SampleWithDialogScreen
 import com.example.composeuitestsample.ui.SampleWithSheetScreen
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
+import java.time.Duration
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import org.robolectric.shadows.ShadowSystemClock
 
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -28,9 +36,43 @@ class SampleScreenTest {
 
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
     @Test
+    fun verify_thread() {
+        println(Thread.currentThread()) // Thread[#33,SDK 34 Main Thread,5,SDK 34]
+        println(Thread.currentThread().name) // SDK 34 Main Thread
+        assertTrue(Thread.currentThread() == Looper.getMainLooper().thread) // true, because this is a test thread in robolectric
+    }
+
+    @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
+    @Test
+    fun verify_coroutine_thread() = runTest {
+        println(Thread.currentThread()) // Thread[#33,SDK 34 Main Thread @kotlinx.coroutines.test runner#3,5,SDK 34]
+        println(Thread.currentThread().name) // SDK 34 Main Thread @kotlinx.coroutines.test runner#3
+        assertTrue(Thread.currentThread() == Looper.getMainLooper().thread) // true, because this is a test thread in robolectric
+    }
+
+    @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
+    @Test
+    fun verify_coroutine_test() = runTest {
+        launch {
+            delay(1000)
+            println("coroutine")
+        }
+        println("test")
+
+    }
+
+    @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
+    @Test
+    fun advance_system_clock() {
+        println(SystemClock.uptimeMillis())
+        ShadowSystemClock.advanceBy(Duration.ofHours(1))
+        println(SystemClock.uptimeMillis())
+        // advanced SystemClock, but not advanced System.currentTimeMillis()
+    }
+
+    @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
+    @Test
     fun verify_sample_tree() {
-        println(Thread.currentThread())
-        println(Thread.currentThread().name)
         composeTestRule.setContent {
             SampleScreenContent()
         }

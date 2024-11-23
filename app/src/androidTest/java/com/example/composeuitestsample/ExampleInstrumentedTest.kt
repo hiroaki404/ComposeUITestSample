@@ -1,5 +1,6 @@
 package com.example.composeuitestsample
 
+import android.os.Looper
 import android.util.Log
 import androidx.compose.material3.Text
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -8,6 +9,7 @@ import androidx.compose.ui.test.printToLog
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,7 +27,8 @@ class ExampleInstrumentedTest {
         composeTestRule.onRoot()
             .printToLog("test")
 
-        Log.d("test", "${Thread.currentThread()}")
+        Log.d("test", Thread.currentThread().name) // androidx.test.runner.AndroidJUnitRunner
+        assertFalse(Thread.currentThread() == Looper.getMainLooper().thread) // false, because this is a test thread in instrumented test
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
         assertEquals("com.example.composeuitestsample", appContext.packageName)
     }
