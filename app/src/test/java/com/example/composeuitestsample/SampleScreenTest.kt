@@ -29,6 +29,8 @@ class SampleScreenTest {
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
     @Test
     fun verify_sample_tree() {
+        println(Thread.currentThread())
+        println(Thread.currentThread().name)
         composeTestRule.setContent {
             SampleScreenContent()
         }
