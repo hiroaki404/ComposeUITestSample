@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.composeuitestsample.ui.SampleButtonScreen
 import com.example.composeuitestsample.ui.SampleScreen
 import com.example.composeuitestsample.ui.theme.ComposeUITestSampleTheme
 
@@ -25,6 +26,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun GreetingPreview() {
     ComposeUITestSampleTheme {
-        SampleScreen()
+        SampleButtonScreen()
     }
 }
