@@ -1,6 +1,6 @@
 [versions]
 agp = "8.7.2"
-kotlin = "2.0.0"
+kotlin = "2.0.20"
 coreKtx = "1.15.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
@@ -10,11 +10,16 @@ activityCompose = "1.9.3"
 composeBom = "2024.04.01"
 roborazzi = "1.26.0"
 robolectric = "4.13"
+dagger-hilt = "2.52"
+androidx-hilt = "1.2.0"
+ksp = "2.0.20-1.0.24"
+test-runner = "1.6.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "test-runner" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
@@ -31,10 +36,16 @@ roborazzi-compose = { group = "io.github.takahirom.roborazzi", name = "roborazzi
 roborazzi-junit-rule = { group = "io.github.takahirom.roborazzi", name = "roborazzi-junit-rule", version.ref = "roborazzi" }
 compose-ui-test = { module = "androidx.compose.ui:ui-test-junit4" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+dagger-hilt = { module = "com.google.dagger:hilt-android", version.ref = "dagger-hilt" }
+dagger-hilt-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "dagger-hilt" }
+androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "androidx-hilt" }
+androidx-hilt-navigation = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "androidx-hilt" }
+dagger-hilt-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "dagger-hilt" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 roborazziGradlePlugin = { id = "io.github.takahirom.roborazzi", version.ref = "roborazzi" }
-
+hiltGradlePlugin = { id = "com.google.dagger.hilt.android", version.ref = "dagger-hilt" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

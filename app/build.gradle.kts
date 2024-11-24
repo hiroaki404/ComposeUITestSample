@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.roborazziGradlePlugin)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hiltGradlePlugin)
 }
 
 android {
@@ -16,7 +18,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.example.composeuitestsample.MyTestRunner"
     }
 
     buildTypes {
@@ -70,4 +72,12 @@ dependencies {
     testImplementation(libs.roborazzi.core)
     testImplementation(libs.compose.ui.test)
     testImplementation(libs.robolectric)
+
+    implementation(libs.dagger.hilt)
+    ksp(libs.dagger.hilt.compiler)
+//    implementation(libs.androidx.hilt.compiler)
+//    implementation(libs.androidx.hilt.navigation)
+    testImplementation(libs.dagger.hilt.testing)
+    androidTestImplementation(libs.dagger.hilt.testing)
+    androidTestImplementation(libs.androidx.test.runner)
 }
