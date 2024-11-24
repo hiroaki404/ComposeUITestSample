@@ -17,31 +17,46 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import javax.inject.Inject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.RuleChain
+import org.junit.rules.TestRule
+import org.junit.rules.TestWatcher
+import org.junit.runner.Description
 import org.junit.runner.RunWith
+import org.junit.runners.model.Statement
 
 @HiltAndroidTest
 @RunWith(AndroidJUnit4::class)
 class ExampleInstrumentedTest {
-    @get:Rule(order = 0)
-    val hiltRule = HiltAndroidRule(this)
+    class HiltInjectRule(private val rule: HiltAndroidRule) : TestWatcher() {
+        override fun starting(description: Description?) {
+            super.starting(description)
+            rule.inject()
+        }
+    }
 
-    @get:Rule(order = 1)
-    val composeTestRule = createComposeRule()
+    class HiltAndComposeRule(private val testInstance: Any) : TestRule {
+        val composeRule = createComposeRule()
+        override fun apply(base: Statement?, description: Description?): Statement {
+            val hiltAndroidRule = HiltAndroidRule(testInstance)
+            return RuleChain.outerRule(hiltAndroidRule)
+                .around(HiltInjectRule(hiltAndroidRule))
+                .around(composeRule)
+                .apply(base, description)
+        }
+
+    }
+
+    @get:Rule
+    val rule: HiltAndComposeRule = HiltAndComposeRule(this)
 
     @Inject
     lateinit var sampleRepository: SampleRepository
 
-    @Before
-    fun setUp() {
-        hiltRule.inject()
-    }
-
     @Test
     fun simple_compose_test() {
-        composeTestRule.setContent {
+        rule.composeRule.setContent {
             Column {
                 Text("sample")
                 Button(onClick = {}) {
@@ -49,9 +64,9 @@ class ExampleInstrumentedTest {
                 }
             }
         }
-        composeTestRule.onNode(hasText("sample"))
+        rule.composeRule.onNode(hasText("sample"))
             .assertIsDisplayed()
-        composeTestRule.onNode(hasText("Button"))
+        rule.composeRule.onNode(hasText("Button"))
             .performClick()
     }
 
@@ -59,10 +74,10 @@ class ExampleInstrumentedTest {
     fun print_log() {
 //        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
 //        assertEquals("com.example.composeuitestsample", appContext.packageName)
-        composeTestRule.setContent {
+        rule.composeRule.setContent {
             Text("Hello, World!")
         }
-        composeTestRule.onRoot()
+        rule.composeRule.onRoot()
             .printToLog("test")
 
     }
