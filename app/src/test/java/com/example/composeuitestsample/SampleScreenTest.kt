@@ -16,6 +16,9 @@ import com.example.composeuitestsample.ui.SampleScreenContent
 import com.example.composeuitestsample.ui.SampleWithDialogScreen
 import com.example.composeuitestsample.ui.SampleWithSheetScreen
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
+import dagger.hilt.android.testing.HiltAndroidRule
+import dagger.hilt.android.testing.HiltAndroidTest
+import dagger.hilt.android.testing.HiltTestApplication
 import java.time.Duration
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -23,16 +26,42 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.RuleChain
+import org.junit.rules.TestRule
+import org.junit.rules.TestWatcher
+import org.junit.runner.Description
 import org.junit.runner.RunWith
+import org.junit.runners.model.Statement
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import org.robolectric.shadows.ShadowSystemClock
 
 @RunWith(AndroidJUnit4::class)
+@HiltAndroidTest
+@Config(application = HiltTestApplication::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class SampleScreenTest {
+    class HiltInjectRule(private val rule: HiltAndroidRule) : TestWatcher() {
+        override fun starting(description: Description?) {
+            super.starting(description)
+            rule.inject()
+        }
+    }
+
+    class HiltAndComposeRule(private val testInstance: Any) : TestRule {
+        val composeRule = createComposeRule()
+        override fun apply(base: Statement?, description: Description?): Statement {
+            val hiltAndroidRule = HiltAndroidRule(testInstance)
+            return RuleChain.outerRule(hiltAndroidRule)
+                .around(HiltInjectRule(hiltAndroidRule))
+                .around(composeRule)
+                .apply(base, description)
+        }
+
+    }
+
     @get:Rule
-    val composeTestRule = createComposeRule()
+    val rule: HiltAndComposeRule = HiltAndComposeRule(this)
 
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
     @Test
@@ -73,61 +102,61 @@ class SampleScreenTest {
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
     @Test
     fun verify_sample_tree() {
-        composeTestRule.setContent {
+        rule.composeRule.setContent {
             SampleScreenContent()
         }
-        println(composeTestRule.onRoot().printToString()) // userUnmergedTree = false by default
+        println(rule.composeRule.onRoot().printToString()) // userUnmergedTree = false by default
 
-        println(composeTestRule.onRoot(useUnmergedTree = true).printToString())
+        println(rule.composeRule.onRoot(useUnmergedTree = true).printToString())
 
-        composeTestRule.onNode(hasText("sample"))
+        rule.composeRule.onNode(hasText("sample"))
             .assertIsDisplayed()
     }
 
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
     @Test
     fun verify_merged_tree() {
-        composeTestRule.setContent {
+        rule.composeRule.setContent {
             SampleButtonScreen()
         }
-        println(composeTestRule.onRoot().printToString()) // userUnmergedTree = false by default
-        println(composeTestRule.onRoot(useUnmergedTree = true).printToString())
+        println(rule.composeRule.onRoot().printToString()) // userUnmergedTree = false by default
+        println(rule.composeRule.onRoot(useUnmergedTree = true).printToString())
 
         // ok
-        composeTestRule.onNode(hasText("sample"), useUnmergedTree = true)
+        rule.composeRule.onNode(hasText("sample"), useUnmergedTree = true)
             .performClick()
         // ok
-        composeTestRule.onNode(hasText("sample"), useUnmergedTree = false)
+        rule.composeRule.onNode(hasText("sample"), useUnmergedTree = false)
             .performClick()
 
         // NG, deleted child testTag in mergedTree
-//        composeTestRule.onNode(hasTestTag("sample"))
+//        rule.composeRule.onNode(hasTestTag("sample"))
 //            .assertIsDisplayed()
-//        composeTestRule.onNode(hasTestTag("sample"))
+//        rule.composeRule.onNode(hasTestTag("sample"))
 //            .performClick()
 
         // ok
-        composeTestRule.onNode(hasTestTag("sample"), useUnmergedTree = true)
+        rule.composeRule.onNode(hasTestTag("sample"), useUnmergedTree = true)
             .performClick()
     }
 
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
     @Test
     fun verify_with_dialog_tree() {
-        composeTestRule.setContent {
+        rule.composeRule.setContent {
             SampleWithDialogScreen()
         }
-        composeTestRule.onNode(hasText("show dialog"))
+        rule.composeRule.onNode(hasText("show dialog"))
             .performClick()
         // ng
 //        println(
-//            composeTestRule.onRoot()
+//            rule.composeRule.onRoot()
 //                .printToString()
 //        )
 
         // get dialog tree
         println(
-            composeTestRule.onAllNodes(isRoot())[1]
+            rule.composeRule.onAllNodes(isRoot())[1]
                 .printToString()
         )
     }
@@ -135,12 +164,12 @@ class SampleScreenTest {
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
     @Test
     fun verify_with_sheet_tree() {
-        composeTestRule.setContent {
+        rule.composeRule.setContent {
             SampleWithSheetScreen()
         }
-        composeTestRule.onNode(hasText("show sheet"))
+        rule.composeRule.onNode(hasText("show sheet"))
             .performClick()
-        composeTestRule.onRoot()
+        rule.composeRule.onRoot()
             .also { println(it.printToString()) }
     }
 }
