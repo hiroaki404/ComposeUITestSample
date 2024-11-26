@@ -1,4 +1,4 @@
-package com.example.composeuitestsample
+package com.example.composeuitestsample.data
 
 import javax.inject.Inject
 

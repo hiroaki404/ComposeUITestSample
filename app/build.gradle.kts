@@ -80,4 +80,8 @@ dependencies {
     testImplementation(libs.dagger.hilt.testing)
     androidTestImplementation(libs.dagger.hilt.testing)
     androidTestImplementation(libs.androidx.test.runner)
+
+    implementation(libs.room)
+    implementation(libs.room.ktx)
+    ksp(libs.room.ksp)
 }
