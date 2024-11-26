@@ -9,13 +9,17 @@ import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.printToString
+import androidx.compose.ui.test.swipeDown
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.composeuitestsample.ui.SampleButtonScreen
+import com.example.composeuitestsample.ui.SamplePullToRefresh
 import com.example.composeuitestsample.ui.SampleScreenContent
 import com.example.composeuitestsample.ui.SampleWithDialogScreen
 import com.example.composeuitestsample.ui.SampleWithSheetScreen
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
+import com.github.takahirom.roborazzi.captureRoboImage
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
@@ -171,5 +175,46 @@ class SampleScreenTest {
             .performClick()
         rule.composeRule.onRoot()
             .also { println(it.printToString()) }
+    }
+
+    @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
+    @Test
+    fun verify_pull_to_refresh() = runTest {
+        rule.composeRule.setContent {
+            SamplePullToRefresh(coroutineContext = this@runTest.coroutineContext)
+        }
+
+        // refresh前
+        rule.composeRule.also {
+            println(it.onRoot().printToString())
+        } // 見えてなくてもpull to refreshはnodeにある
+        rule.composeRule.onRoot()
+            .captureRoboImage()
+
+        // pull to refresh
+        rule.composeRule
+            .onRoot()
+            .performTouchInput {
+                swipeDown(
+                    startY = visibleSize.height * 2 / 5F,
+                    endY = visibleSize.height * 4 / 5F,
+                )
+            }
+
+        // refresh直後
+        rule.composeRule.also {
+            println(it.onRoot().printToString())
+        }
+        rule.composeRule.onRoot()
+            .captureRoboImage()
+
+        // refresh状態でなくなった時
+        this.testScheduler.advanceUntilIdle()
+        rule.composeRule.waitForIdle()
+        rule.composeRule.also {
+            println(it.onRoot().printToString())
+        }
+        rule.composeRule.onRoot()
+            .captureRoboImage()
     }
 }
