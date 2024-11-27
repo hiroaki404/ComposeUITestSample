@@ -18,15 +18,21 @@ import com.example.composeuitestsample.ui.SamplePullToRefresh
 import com.example.composeuitestsample.ui.SampleScreenContent
 import com.example.composeuitestsample.ui.SampleWithDialogScreen
 import com.example.composeuitestsample.ui.SampleWithSheetScreen
+import com.example.composeuitestsample.ui.VerifyScopeSampleScreen
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import java.time.Duration
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -38,6 +44,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.model.Statement
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import org.robolectric.shadows.ShadowLooper
 import org.robolectric.shadows.ShadowSystemClock
 
 @RunWith(AndroidJUnit4::class)
@@ -177,17 +184,58 @@ class SampleScreenTest {
             .also { println(it.printToString()) }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
     @Test
-    fun verify_pull_to_refresh() = runTest {
-        rule.composeRule.setContent {
-            SamplePullToRefresh(coroutineContext = this@runTest.coroutineContext)
+    fun verify_setMain() {
+        val testDispatcher = StandardTestDispatcher()
+        Dispatchers.setMain(testDispatcher)
+
+        runTest(testDispatcher) {
+            rule.composeRule.setContent {
+                VerifyScopeSampleScreen()
+            }
+            // log scope.launch
+            rule.composeRule.onNode(hasText("sample"))
+                .assertIsDisplayed()
+
+            ShadowLooper.runUiThreadTasksIncludingDelayedTasks() // no effect
+            testDispatcher.scheduler.advanceUntilIdle() // advance delay in viewModelScope
+            // log viewModelScope launch, viewModelScope reach to end
+            rule.composeRule.mainClock.advanceTimeBy(2000) // advance delay in rememberCoroutineScope
+            // log scope reach to end
         }
 
-        // refresh前
+        Dispatchers.resetMain()
+    }
+
+    @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
+    @Test
+    fun verify_runUiThreadTasksIncludingDelayedTasks() {
+        rule.composeRule.setContent {
+            VerifyScopeSampleScreen()
+        }
+        // log viewModelScope.launch, scope.launch
+        rule.composeRule.onNode(hasText("sample"))
+            .assertIsDisplayed()
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks() // advance delay in viewModelScope
+        // log viewModelScope reach to end
+        rule.composeRule.mainClock.advanceTimeBy(2000) // advance delay in rememberCoroutineScope
+        // log scope reach to end
+    }
+
+    @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
+    @Test
+    fun verify_pull_to_refresh() {
+        rule.composeRule.setContent {
+            SamplePullToRefresh()
+        }
+
+        // before refresh
         rule.composeRule.also {
             println(it.onRoot().printToString())
-        } // 見えてなくてもpull to refreshはnodeにある
+        } // exist progress node
         rule.composeRule.onRoot()
             .captureRoboImage()
 
@@ -201,16 +249,18 @@ class SampleScreenTest {
                 )
             }
 
-        // refresh直後
+        // refreshing
         rule.composeRule.also {
             println(it.onRoot().printToString())
         }
+        // log refreshing
         rule.composeRule.onRoot()
             .captureRoboImage()
 
-        // refresh状態でなくなった時
-        this.testScheduler.advanceUntilIdle()
-        rule.composeRule.waitForIdle()
+        rule.composeRule.mainClock.advanceTimeBy(2000) // advance delay in rememberCoroutineScope
+
+        // log refresh end
+        // after refresh
         rule.composeRule.also {
             println(it.onRoot().printToString())
         }

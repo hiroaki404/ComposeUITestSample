@@ -6,7 +6,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.lifecycleScope
 import com.example.composeuitestsample.ui.SampleButtonScreen
 import com.example.composeuitestsample.ui.SamplePullToRefresh
 import com.example.composeuitestsample.ui.theme.ComposeUITestSampleTheme
@@ -17,7 +16,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ComposeUITestSampleTheme {
-                SamplePullToRefresh(coroutineContext = lifecycleScope.coroutineContext)
+                SamplePullToRefresh()
             }
         }
     }

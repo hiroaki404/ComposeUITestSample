@@ -18,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,8 +31,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import kotlin.coroutines.CoroutineContext
-import kotlinx.coroutines.CoroutineScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -129,10 +130,43 @@ fun SampleWithSheetScreen(modifier: Modifier = Modifier) {
     }
 }
 
+@Composable
+fun VerifyScopeSampleScreen(modifier: Modifier = Modifier) {
+    class SampleViewModel : ViewModel() {
+        fun invokeFunc() {
+            viewModelScope.launch {
+                println("viewModelScope launch")
+                delay(1000)
+                println("viewModelScope reach to end")
+            }
+        }
+    }
+
+    val scope = rememberCoroutineScope()
+
+    val viewModel = remember { SampleViewModel() }
+    LaunchedEffect(Unit) {
+        viewModel.invokeFunc()
+    }
+
+    LaunchedEffect(Unit) {
+        scope.launch {
+            println("scope launch")
+            delay(1000)
+            println("scope reach to end")
+        }
+    }
+
+    Box(modifier = modifier) {
+        Text(text = "sample")
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SamplePullToRefresh(modifier: Modifier = Modifier, coroutineContext: CoroutineContext) {
+fun SamplePullToRefresh(modifier: Modifier = Modifier) {
     var isRefreshing by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     Scaffold(modifier = modifier) { innerPadding ->
         PullToRefreshBox(
@@ -140,9 +174,11 @@ fun SamplePullToRefresh(modifier: Modifier = Modifier, coroutineContext: Corouti
             isRefreshing = isRefreshing,
             onRefresh = {
                 isRefreshing = true
-                CoroutineScope(coroutineContext).launch {
+                scope.launch {
+                    println("refreshing")
                     delay(2000)
                     isRefreshing = false
+                    println("refresh end")
                 }
             },
         ) {
