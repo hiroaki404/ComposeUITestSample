@@ -104,10 +104,19 @@ class SampleScreenTest {
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
     @Test
     fun advance_system_clock() {
-        println(SystemClock.uptimeMillis())
+        println(SystemClock.uptimeMillis()) // 102
         ShadowSystemClock.advanceBy(Duration.ofHours(1))
-        println(SystemClock.uptimeMillis())
+        println(SystemClock.uptimeMillis()) // 3600102
         // advanced SystemClock, but not advanced System.currentTimeMillis()
+    }
+
+    @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
+    @Test
+    fun advance_system_clock2() {
+        println(System.currentTimeMillis())
+        // advance System.currentTimeMillis(), but it take long time for test
+//        Thread.sleep(10000)
+        println(System.currentTimeMillis())
     }
 
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
