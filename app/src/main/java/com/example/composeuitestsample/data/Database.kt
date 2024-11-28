@@ -19,6 +19,7 @@ import javax.inject.Qualifier
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
 @Entity(tableName = "bird")
@@ -32,6 +33,9 @@ data class Bird(
 interface BirdDao {
     @Query("SELECT * FROM bird")
     suspend fun getAll(): List<Bird>
+
+    @Query("SELECT * FROM bird")
+    fun getAllFlow(): Flow<List<Bird>>
 
     @Insert
     suspend fun insertAll(vararg birds: Bird)
@@ -87,6 +91,9 @@ class BirdRepository @Inject constructor(
     suspend fun getAllBirds(): List<Bird> = withContext(coroutineDispatcher) {
         birdDao.getAll()
     }
+
+    fun getAllBirdsFlow(): Flow<List<Bird>> = birdDao.getAllFlow()
+
 
     suspend fun insertBirds(vararg birds: Bird) = withContext(coroutineDispatcher) {
         birdDao.insertAll(*birds)
