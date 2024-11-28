@@ -84,4 +84,5 @@ dependencies {
     implementation(libs.room)
     implementation(libs.room.ktx)
     ksp(libs.room.ksp)
+    testImplementation(libs.androidx.arch.test)
 }
