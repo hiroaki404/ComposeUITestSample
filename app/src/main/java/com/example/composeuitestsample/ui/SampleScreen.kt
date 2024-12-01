@@ -182,13 +182,16 @@ fun SamplePullToRefresh(modifier: Modifier = Modifier) {
                 }
             },
         ) {
+//            AnimatedVisibility(isRefreshing) {
+//                Text(text = "refreshing")
+//            }
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 item {
                     Box(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = "sample")
+//                        Text(text = "sample")
                     }
                 }
             }

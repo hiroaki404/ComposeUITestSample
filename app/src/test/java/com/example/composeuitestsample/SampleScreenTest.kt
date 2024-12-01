@@ -276,4 +276,50 @@ class SampleScreenTest {
         rule.composeRule.onRoot()
             .captureRoboImage()
     }
+
+    @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
+    @Test
+    fun verify_pull_to_refresh_animation() {
+        rule.composeRule.setContent {
+            SamplePullToRefresh()
+        }
+
+        // before refresh
+        rule.composeRule.also {
+            println(it.onRoot().printToString())
+        } // exist progress node
+        rule.composeRule.onRoot()
+            .captureRoboImage()
+
+        rule.composeRule.mainClock.autoAdvance = false
+        // pull to refresh
+        rule.composeRule
+            .onRoot()
+            .performTouchInput {
+                swipeDown(
+                    startY = visibleSize.height * 2 / 5F,
+                    endY = visibleSize.height * 4 / 5F,
+                )
+            }
+        // アニメーションはpullとローディングでひと続きだから、最初からautoAdvance=falseにしないといけない
+        rule.composeRule.mainClock.advanceTimeBy(1000) // advance delay in
+        // refreshing
+        rule.composeRule.also {
+            println(it.onRoot().printToString())
+        }
+        // log refreshing
+        rule.composeRule.onRoot()
+            .captureRoboImage()
+
+        rule.composeRule.mainClock.advanceTimeBy(2000) // advance delay in rememberCoroutineScope
+
+
+        // log refresh end
+        // after refresh
+        rule.composeRule.also {
+            println(it.onRoot().printToString())
+        }
+        rule.composeRule.onRoot()
+            .captureRoboImage()
+    }
 }
