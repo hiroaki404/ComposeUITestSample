@@ -266,7 +266,7 @@ class SampleScreenTest {
         rule.composeRule.onRoot()
             .captureRoboImage()
 
-        rule.composeRule.mainClock.advanceTimeBy(2000) // advance delay in rememberCoroutineScope
+        rule.composeRule.mainClock.advanceTimeBy(2000) // advance delay
 
         // log refresh end
         // after refresh
@@ -311,7 +311,7 @@ class SampleScreenTest {
         rule.composeRule.onRoot()
             .captureRoboImage()
 
-        rule.composeRule.mainClock.advanceTimeBy(2000) // advance delay in rememberCoroutineScope
+        rule.composeRule.mainClock.advanceTimeBy(2000) // advance delay
 
 
         // log refresh end
