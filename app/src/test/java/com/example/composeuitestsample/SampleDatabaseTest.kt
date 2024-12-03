@@ -31,8 +31,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -127,16 +128,13 @@ class SampleDatabaseTest {
         val dispatcher = testDispatcher
         Dispatchers.setMain(dispatcher)
         runTest(testDispatcher) {
-//        birdRepository.insertBirds(Bird("1", "bird1", "red"))
-//        birdRepository.insertBirds(Bird("2", "bird2", "blue"))
+            birdRepository.insertBirds(Bird("1", "bird1", "red"))
+            birdRepository.insertBirds(Bird("2", "bird2", "blue"))
 
             rule.composeRule.setContent {
-//            val state by birdRepository.getAllBirdsFlow()
-//                .collectAsState(listOf(Bird("0", "bird0", "green")))
-
                 val state by viewModel.birds.collectAsState()
 
-                if (state.isEmpty()) {
+                if (state.size == 2) {
                     Text("loaded")
                 }
             }
@@ -148,14 +146,10 @@ class SampleDatabaseTest {
 }
 
 class SampleViewModel @Inject constructor(birdRepository: BirdRepository) : ViewModel() {
-    val birds: MutableStateFlow<List<Bird>> = MutableStateFlow(listOf(Bird("0", "bird0", "green")))
-
-    init {
-        viewModelScope.launch {
-            birdRepository.getAllBirdsFlow()
-                .collect {
-                    birds.value = it
-                }
-        }
-    }
+    val birds: StateFlow<List<Bird>> = birdRepository.getAllBirdsFlow()
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(),
+            listOf(Bird("0", "bird0", "green"))
+        )
 }
