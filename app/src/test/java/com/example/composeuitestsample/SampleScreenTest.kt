@@ -2,6 +2,7 @@ package com.example.composeuitestsample
 
 import android.os.Looper
 import android.os.SystemClock
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -98,7 +99,28 @@ class SampleScreenTest {
             println("coroutine")
         }
         println("test")
+    }
 
+    @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
+    @Test
+    fun verify_coroutine_test2() = runTest {
+        launch {
+            delay(1000)
+            println("coroutine")
+        }
+
+        rule.composeRule.setContent {
+            LaunchedEffect(Unit) {
+                delay(1000)
+                println("compose coroutine")
+            }
+        }
+
+        println("test")
+        testScheduler.advanceUntilIdle() // print coroutine
+        rule.composeRule.mainClock.advanceTimeBy(1000) // print compose coroutine
+        
+        println("test2")
     }
 
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
