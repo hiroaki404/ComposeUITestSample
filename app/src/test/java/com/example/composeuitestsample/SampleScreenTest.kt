@@ -119,7 +119,7 @@ class SampleScreenTest {
         println("test")
         testScheduler.advanceUntilIdle() // print coroutine
         rule.composeRule.mainClock.advanceTimeBy(1000) // print compose coroutine
-        
+
         println("test2")
     }
 
@@ -251,6 +251,7 @@ class SampleScreenTest {
             .assertIsDisplayed()
 
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks() // advance delay in viewModelScope
+//        ShadowLooper.shadowMainLooper().idleFor(Duration.ofSeconds(2))  // same effect as above
         // log viewModelScope reach to end
         rule.composeRule.mainClock.advanceTimeBy(2000) // advance delay in rememberCoroutineScope
         // log scope reach to end
