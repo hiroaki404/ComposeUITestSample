@@ -20,6 +20,7 @@ import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 
 @Entity(tableName = "bird")
@@ -92,7 +93,7 @@ class BirdRepository @Inject constructor(
         birdDao.getAll()
     }
 
-    fun getAllBirdsFlow(): Flow<List<Bird>> = birdDao.getAllFlow()
+    fun getAllBirdsFlow(): Flow<List<Bird>> = birdDao.getAllFlow().flowOn(coroutineDispatcher)
 
 
     suspend fun insertBirds(vararg birds: Bird) = withContext(coroutineDispatcher) {

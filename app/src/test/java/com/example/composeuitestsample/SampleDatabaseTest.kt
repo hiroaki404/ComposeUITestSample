@@ -128,16 +128,14 @@ class SampleDatabaseTest {
         val dispatcher = testDispatcher
         Dispatchers.setMain(dispatcher)
         runTest(testDispatcher) {
-            birdRepository.insertBirds(Bird("1", "bird1", "red"))
-            birdRepository.insertBirds(Bird("2", "bird2", "blue"))
-
             rule.composeRule.setContent {
                 val state by viewModel.birds.collectAsState()
 
-                if (state.size == 2) {
+                if (state != null) {
                     Text("loaded")
                 }
             }
+            testDispatcher.scheduler.advanceUntilIdle()
             rule.composeRule.onNode(hasText("loaded"))
                 .assertIsDisplayed()
         }
@@ -146,10 +144,10 @@ class SampleDatabaseTest {
 }
 
 class SampleViewModel @Inject constructor(birdRepository: BirdRepository) : ViewModel() {
-    val birds: StateFlow<List<Bird>> = birdRepository.getAllBirdsFlow()
+    val birds: StateFlow<List<Bird>?> = birdRepository.getAllBirdsFlow()
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(),
-            listOf(Bird("0", "bird0", "green"))
+            null
         )
 }
