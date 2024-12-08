@@ -149,7 +149,9 @@ class SampleScreenTest {
         }
         println(rule.composeRule.onRoot().printToString()) // userUnmergedTree = false by default
 
-        println(rule.composeRule.onRoot(useUnmergedTree = true).printToString())
+        println(
+            rule.composeRule.onRoot(useUnmergedTree = true).printToString()
+        ) // same effect as above
 
         rule.composeRule.onNode(hasText("sample"))
             .assertIsDisplayed()
