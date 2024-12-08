@@ -149,7 +149,9 @@ class SampleScreenTest {
         }
         println(rule.composeRule.onRoot().printToString()) // userUnmergedTree = false by default
 
-        println(rule.composeRule.onRoot(useUnmergedTree = true).printToString())
+        println(
+            rule.composeRule.onRoot(useUnmergedTree = true).printToString()
+        ) // same effect as above
 
         rule.composeRule.onNode(hasText("sample"))
             .assertIsDisplayed()
@@ -230,7 +232,7 @@ class SampleScreenTest {
             rule.composeRule.onNode(hasText("sample"))
                 .assertIsDisplayed()
 
-            ShadowLooper.runUiThreadTasksIncludingDelayedTasks() // no effect
+//            ShadowLooper.runUiThreadTasksIncludingDelayedTasks() // no effect
             testDispatcher.scheduler.advanceUntilIdle() // advance delay in viewModelScope
             // log viewModelScope launch, viewModelScope reach to end
             rule.composeRule.mainClock.advanceTimeBy(2000) // advance delay in rememberCoroutineScope
