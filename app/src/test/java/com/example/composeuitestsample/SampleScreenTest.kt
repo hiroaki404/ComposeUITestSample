@@ -237,6 +237,7 @@ class SampleScreenTest {
             // log viewModelScope launch, viewModelScope reach to end
             rule.composeRule.mainClock.advanceTimeBy(2000) // advance delay in rememberCoroutineScope
             // log scope reach to end
+            println("end")
         }
 
         Dispatchers.resetMain()
@@ -257,6 +258,7 @@ class SampleScreenTest {
         // log viewModelScope reach to end
         rule.composeRule.mainClock.advanceTimeBy(2000) // advance delay in rememberCoroutineScope
         // log scope reach to end
+        println("end")
     }
 
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
