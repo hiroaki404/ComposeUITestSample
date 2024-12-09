@@ -139,7 +139,7 @@ class SampleDatabaseTest {
                     Text("loaded")
                 }
             }
-            testDispatcher.scheduler.advanceUntilIdle()
+            testDispatcher.scheduler.runCurrent()
             rule.composeRule.onNode(hasText("loaded"))
                 .assertIsDisplayed()
         }
