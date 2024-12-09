@@ -66,11 +66,15 @@ class TestDispatcherModule {
 object TestDatabaseModule {
     @Singleton
     @Provides
-    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
+    fun provideAppDatabase(
+        @ApplicationContext context: Context,
+        testDispatcher: TestDispatcher
+    ): AppDatabase {
         return Room.databaseBuilder(
             context, AppDatabase::class.java, "bird_database"
         )
             .allowMainThreadQueries() // test only
+//            .setQueryExecutor(testDispatcher.asExecutor()) // same effect as InstantTaskExecutorRule
             .build()
     }
 }
