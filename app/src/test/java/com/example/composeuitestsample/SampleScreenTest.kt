@@ -233,7 +233,9 @@ class SampleScreenTest {
                 .assertIsDisplayed()
 
 //            ShadowLooper.runUiThreadTasksIncludingDelayedTasks() // no effect
+            println("before advance")
             testDispatcher.scheduler.advanceUntilIdle() // advance delay in viewModelScope
+            println("advanced test scheduler")
             // log viewModelScope launch, viewModelScope reach to end
             rule.composeRule.mainClock.advanceTimeBy(2000) // advance delay in rememberCoroutineScope
             // log scope reach to end
@@ -252,6 +254,11 @@ class SampleScreenTest {
         // log viewModelScope.launch, scope.launch
         rule.composeRule.onNode(hasText("sample"))
             .assertIsDisplayed()
+        println("before performClick")
+        rule.composeRule.onNode(hasText("button"))
+            .performClick()
+        // log button click
+        println("performClick")
 
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks() // advance delay in viewModelScope
 //        ShadowLooper.shadowMainLooper().idleFor(Duration.ofSeconds(2))  // same effect as above

@@ -1,6 +1,7 @@
 package com.example.composeuitestsample.ui
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -157,8 +158,17 @@ fun VerifyScopeSampleScreen(modifier: Modifier = Modifier) {
         }
     }
 
-    Box(modifier = modifier) {
+    Column(modifier = modifier) {
         Text(text = "sample")
+        Button(onClick = {
+            scope.launch {
+                println("button click")
+                delay(1000)
+                println("button click end")
+            }
+        }) {
+            Text(text = "button")
+        }
     }
 }
 
