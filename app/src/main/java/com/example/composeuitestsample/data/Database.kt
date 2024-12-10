@@ -19,6 +19,7 @@ import javax.inject.Qualifier
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
@@ -90,11 +91,11 @@ class BirdRepository @Inject constructor(
     @IoDispatcher private val coroutineDispatcher: CoroutineDispatcher
 ) {
     suspend fun getAllBirds(): List<Bird> = withContext(coroutineDispatcher) {
+        delay(1000) // for verify advanceTimeBy in tests
         birdDao.getAll()
     }
 
     fun getAllBirdsFlow(): Flow<List<Bird>> = birdDao.getAllFlow().flowOn(coroutineDispatcher)
-
 
     suspend fun insertBirds(vararg birds: Bird) = withContext(coroutineDispatcher) {
         birdDao.insertAll(*birds)

@@ -3,6 +3,7 @@ package com.example.composeuitestsample
 import android.content.Context
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.test.assertIsDisplayed
@@ -30,9 +31,12 @@ import dagger.hilt.testing.TestInstallIn
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -123,6 +127,30 @@ class SampleDatabaseTest {
     @Inject
     lateinit var viewModel: SampleViewModel
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
+    @Test
+    fun verify_database_query() = runTest(testDispatcher) {
+        birdRepository.insertBirds(Bird("1", "bird1", "red"))
+
+        rule.composeRule.setContent {
+            val state by viewModel.birdsByQuery.collectAsState()
+
+            LaunchedEffect(Unit) {
+                viewModel.fetchBirdsByQuery()
+            }
+
+            if (state?.size == 1) {
+                Text("loaded")
+            }
+        }
+
+        testDispatcher.scheduler.advanceTimeBy(1000)
+        testDispatcher.scheduler.runCurrent()
+        rule.composeRule.onNode(isRoot())
+            .assertIsDisplayed()
+    }
+
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
     @Test
     fun verify_database_flow() = runTest(testDispatcher) {
@@ -140,14 +168,25 @@ class SampleDatabaseTest {
         rule.composeRule.onNode(isRoot())
             .assertIsDisplayed()
     }
+
 }
 
 class SampleViewModel @Inject constructor(private val birdRepository: BirdRepository) :
     ViewModel() {
+    var _birdsByQuery: MutableStateFlow<List<Bird>?> = MutableStateFlow(null)
+    val birdsByQuery: StateFlow<List<Bird>?> = _birdsByQuery
+
+    fun fetchBirdsByQuery() {
+        viewModelScope.launch {
+            _birdsByQuery.value = birdRepository.getAllBirds()
+        }
+    }
+
     val birds: StateFlow<List<Bird>?> = birdRepository.getAllBirdsFlow()
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(),
             null
         )
+
 }
