@@ -32,8 +32,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withContext
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -99,6 +101,27 @@ class SampleScreenTest {
             println("coroutine")
         }
         println("test")
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
+    @Test
+    fun verify_withContext() {
+        val testDispatcher = StandardTestDispatcher()
+        runTest(testDispatcher) {
+            withContext(testDispatcher) {
+                println("withContext1")
+            }
+            launch {
+                withContext(testDispatcher) {
+                    println("withContext2")
+                }
+            }
+            runCurrent()
+            println("test")
+            // log withContext1, withContext2, test,
+            // if no runCurrent,  log withContext1, test, withContext2
+        }
     }
 
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
@@ -219,10 +242,34 @@ class SampleScreenTest {
             .also { println(it.printToString()) }
     }
 
+    @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
+    @Test
+    fun verify_runUiThreadTasksIncludingDelayedTasks() {
+        rule.composeRule.setContent {
+            VerifyScopeSampleScreen()
+        }
+        // log viewModelScope.launch, scope.launch
+        rule.composeRule.onNode(hasText("sample"))
+            .assertIsDisplayed()
+        println("before performClick")
+        rule.composeRule.onNode(hasText("button"))
+            .performClick()
+        // log button click
+        println("performClick")
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks() // advance delay in viewModelScope
+//        ShadowLooper.shadowMainLooper().idleFor(Duration.ofSeconds(2))  // same effect as above
+        // log viewModelScope reach to end
+        rule.composeRule.mainClock.advanceTimeBy(2000) // advance delay in rememberCoroutineScope
+        // log scope reach to end
+        println("end")
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
     @Test
     fun verify_setMain() {
+        // if control viewModelScope coroutine to launch, can to use setMain
         val testDispatcher = StandardTestDispatcher()
         Dispatchers.setMain(testDispatcher)
 
@@ -245,29 +292,6 @@ class SampleScreenTest {
         }
 
         Dispatchers.resetMain()
-    }
-
-    @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
-    @Test
-    fun verify_runUiThreadTasksIncludingDelayedTasks() {
-        rule.composeRule.setContent {
-            VerifyScopeSampleScreen()
-        }
-        // log viewModelScope.launch, scope.launch
-        rule.composeRule.onNode(hasText("sample"))
-            .assertIsDisplayed()
-        println("before performClick")
-        rule.composeRule.onNode(hasText("button"))
-            .performClick()
-        // log button click
-        println("performClick")
-
-        ShadowLooper.runUiThreadTasksIncludingDelayedTasks() // advance delay in viewModelScope
-//        ShadowLooper.shadowMainLooper().idleFor(Duration.ofSeconds(2))  // same effect as above
-        // log viewModelScope reach to end
-        rule.composeRule.mainClock.advanceTimeBy(2000) // advance delay in rememberCoroutineScope
-        // log scope reach to end
-        println("end")
     }
 
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)

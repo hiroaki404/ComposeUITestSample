@@ -6,7 +6,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -30,15 +30,12 @@ import dagger.hilt.testing.TestInstallIn
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -74,7 +71,7 @@ object TestDatabaseModule {
             context, AppDatabase::class.java, "bird_database"
         )
             .allowMainThreadQueries() // test only
-//            .setQueryExecutor(testDispatcher.asExecutor()) // same effect as InstantTaskExecutorRule
+//            .setQueryExecutor(testDispatcher.asExecutor())
             .build()
     }
 }
@@ -116,7 +113,7 @@ class SampleDatabaseTest {
 
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
     @Test
-    fun verify_database() = runTest(testDispatcher.scheduler) {
+    fun verify_database() = runTest(testDispatcher) {
         assert(birdRepository.getAllBirds().isEmpty())
         birdRepository.insertBirds(Bird("1", "bird1", "red"))
         birdRepository.insertBirds(Bird("2", "bird2", "blue"))
@@ -128,26 +125,25 @@ class SampleDatabaseTest {
 
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
     @Test
-    fun verify_database_flow() {
-        val dispatcher = testDispatcher
-        Dispatchers.setMain(dispatcher)
-        runTest(testDispatcher) {
-            rule.composeRule.setContent {
-                val state by viewModel.birds.collectAsState()
+    fun verify_database_flow() = runTest(testDispatcher) {
+        birdRepository.insertBirds(Bird("1", "bird1", "red"))
 
-                if (state != null) {
-                    Text("loaded")
-                }
+        rule.composeRule.setContent {
+            val state by viewModel.birds.collectAsState()
+
+            if (state?.size == 1) {
+                Text("loaded")
             }
-            testDispatcher.scheduler.runCurrent()
-            rule.composeRule.onNode(hasText("loaded"))
-                .assertIsDisplayed()
         }
-        Dispatchers.resetMain()
+
+        testDispatcher.scheduler.runCurrent()
+        rule.composeRule.onNode(isRoot())
+            .assertIsDisplayed()
     }
 }
 
-class SampleViewModel @Inject constructor(birdRepository: BirdRepository) : ViewModel() {
+class SampleViewModel @Inject constructor(private val birdRepository: BirdRepository) :
+    ViewModel() {
     val birds: StateFlow<List<Bird>?> = birdRepository.getAllBirdsFlow()
         .stateIn(
             viewModelScope,
