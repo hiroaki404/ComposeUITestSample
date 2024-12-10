@@ -111,6 +111,7 @@ class SampleScreenTest {
 
         rule.composeRule.setContent {
             LaunchedEffect(Unit) {
+                println("launchedEffect")
                 delay(1000)
                 println("compose coroutine")
             }
@@ -121,6 +122,7 @@ class SampleScreenTest {
         rule.composeRule.mainClock.advanceTimeBy(1000) // print compose coroutine
 
         println("test2")
+        // log launchedEffect, test, coroutine, compose coroutine, test2
     }
 
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
@@ -235,8 +237,8 @@ class SampleScreenTest {
 //            ShadowLooper.runUiThreadTasksIncludingDelayedTasks() // no effect
             println("before advance")
             testDispatcher.scheduler.advanceUntilIdle() // advance delay in viewModelScope
-            println("advanced test scheduler")
             // log viewModelScope launch, viewModelScope reach to end
+            println("before advance test scheduler")
             rule.composeRule.mainClock.advanceTimeBy(2000) // advance delay in rememberCoroutineScope
             // log scope reach to end
             println("end")
