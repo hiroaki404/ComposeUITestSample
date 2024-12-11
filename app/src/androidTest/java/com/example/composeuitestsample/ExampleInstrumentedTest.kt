@@ -57,29 +57,32 @@ class ExampleInstrumentedTest {
 
     @Test
     fun simple_compose_test() {
-        rule.composeRule.setContent {
-            Column {
-                Text("sample")
-                Button(onClick = {}) {
-                    Text("Button")
+        rule.composeRule.apply {
+            setContent {
+                Column {
+                    Text("sample")
+                    Button(onClick = {}) {
+                        Text("Button")
+                    }
                 }
             }
+            onNode(hasText("sample"))
+                .assertIsDisplayed()
+            onNode(hasText("Button"))
+                .performClick()
         }
-        rule.composeRule.onNode(hasText("sample"))
-            .assertIsDisplayed()
-        rule.composeRule.onNode(hasText("Button"))
-            .performClick()
     }
 
     @Test
     fun print_log() {
 //        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
 //        assertEquals("com.example.composeuitestsample", appContext.packageName)
-        rule.composeRule.setContent {
-            Text("Hello, World!")
+        rule.composeRule.apply {
+            setContent {
+                Text("Hello, World!")
+            }
+            onRoot().printToLog("test")
         }
-        rule.composeRule.onRoot()
-            .printToLog("test")
 
     }
 

@@ -132,20 +132,20 @@ class SampleScreenTest {
             println("coroutine")
         }
 
-        rule.composeRule.setContent {
-            LaunchedEffect(Unit) {
-                println("launchedEffect")
-                delay(1000)
-                println("compose coroutine")
+        rule.composeRule.apply {
+            setContent {
+                LaunchedEffect(Unit) {
+                    println("launchedEffect")
+                    delay(1000)
+                    println("compose coroutine")
+                }
             }
+            println("test")
+            testScheduler.advanceUntilIdle() // print coroutine
+            mainClock.advanceTimeBy(1000) // print compose coroutine
+            println("test2")
+            // log launchedEffect, test, coroutine, compose coroutine, test2
         }
-
-        println("test")
-        testScheduler.advanceUntilIdle() // print coroutine
-        rule.composeRule.mainClock.advanceTimeBy(1000) // print compose coroutine
-
-        println("test2")
-        // log launchedEffect, test, coroutine, compose coroutine, test2
     }
 
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
@@ -185,84 +185,92 @@ class SampleScreenTest {
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
     @Test
     fun verify_merged_tree() {
-        rule.composeRule.setContent {
-            SampleButtonScreen()
-        }
-        println(rule.composeRule.onRoot().printToString()) // userUnmergedTree = false by default
-        println(rule.composeRule.onRoot(useUnmergedTree = true).printToString())
+        rule.composeRule.apply {
+            setContent {
+                SampleButtonScreen()
+            }
+            println(
+                onRoot().printToString()
+            ) // userUnmergedTree = false by default
+            println(onRoot(useUnmergedTree = true).printToString())
 
-        // ok
-        rule.composeRule.onNode(hasText("sample"), useUnmergedTree = true)
-            .performClick()
-        // ok
-        rule.composeRule.onNode(hasText("sample"), useUnmergedTree = false)
-            .performClick()
+            // ok
+            onNode(hasText("sample"), useUnmergedTree = true)
+                .performClick()
+            // ok
+            onNode(hasText("sample"), useUnmergedTree = false)
+                .performClick()
 
-        // NG, deleted child testTag in mergedTree
-//        rule.composeRule.onNode(hasTestTag("sample"))
+            // NG, deleted child testTag in mergedTree
+//        onNode(hasTestTag("sample"))
 //            .assertIsDisplayed()
-//        rule.composeRule.onNode(hasTestTag("sample"))
+//        onNode(hasTestTag("sample"))
 //            .performClick()
 
-        // ok
-        rule.composeRule.onNode(hasTestTag("sample"), useUnmergedTree = true)
-            .performClick()
+            // ok
+            onNode(hasTestTag("sample"), useUnmergedTree = true)
+                .performClick()
+        }
     }
 
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
     @Test
     fun verify_with_dialog_tree() {
-        rule.composeRule.setContent {
-            SampleWithDialogScreen()
-        }
-        rule.composeRule.onNode(hasText("show dialog"))
-            .performClick()
-        // ng
-//        println(
-//            rule.composeRule.onRoot()
-//                .printToString()
-//        )
+        rule.composeRule.apply {
 
-        // get dialog tree
-        println(
-            rule.composeRule.onAllNodes(isRoot())[1]
-                .printToString()
-        )
+            setContent {
+                SampleWithDialogScreen()
+            }
+            onNode(hasText("show dialog"))
+                .performClick()
+            // ng
+//        println(onRoot().printToString())
+
+            // get dialog tree
+            println(
+                onAllNodes(isRoot())[1]
+                    .printToString()
+            )
+        }
     }
 
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
     @Test
     fun verify_with_sheet_tree() {
-        rule.composeRule.setContent {
-            SampleWithSheetScreen()
+        rule.composeRule.apply {
+            setContent {
+                SampleWithSheetScreen()
+            }
+            onNode(hasText("show sheet"))
+                .performClick()
+            onRoot()
+                .also { println(it.printToString()) }
         }
-        rule.composeRule.onNode(hasText("show sheet"))
-            .performClick()
-        rule.composeRule.onRoot()
-            .also { println(it.printToString()) }
     }
 
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
     @Test
     fun verify_runUiThreadTasksIncludingDelayedTasks() {
-        rule.composeRule.setContent {
-            VerifyScopeSampleScreen()
-        }
-        // log viewModelScope.launch, scope.launch
-        rule.composeRule.onNode(hasText("sample"))
-            .assertIsDisplayed()
-        println("before performClick")
-        rule.composeRule.onNode(hasText("button"))
-            .performClick()
-        // log button click
-        println("performClick")
+        rule.composeRule.apply {
+            setContent {
+                VerifyScopeSampleScreen()
+            }
+            // log viewModelScope.launch, scope.launch
+            onNode(hasText("sample"))
+                .assertIsDisplayed()
+            println("before performClick")
+            onNode(hasText("button"))
+                .performClick()
+            // log button click
+            println("performClick")
 
-        ShadowLooper.runUiThreadTasksIncludingDelayedTasks() // advance delay in viewModelScope
+            ShadowLooper.runUiThreadTasksIncludingDelayedTasks() // advance delay in viewModelScope
 //        ShadowLooper.shadowMainLooper().idleFor(Duration.ofSeconds(2))  // same effect as above
-        // log viewModelScope reach to end
-        rule.composeRule.mainClock.advanceTimeBy(2000) // advance delay in rememberCoroutineScope
-        // log scope reach to end
-        println("end")
+            // log viewModelScope reach to end
+            mainClock.advanceTimeBy(2000) // advance delay in rememberCoroutineScope
+            // log scope reach to end
+            println("end")
+        }
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -274,21 +282,23 @@ class SampleScreenTest {
         Dispatchers.setMain(testDispatcher)
 
         runTest(testDispatcher) {
-            rule.composeRule.setContent {
-                VerifyScopeSampleScreen()
-            }
-            // log scope.launch
-            rule.composeRule.onNode(hasText("sample"))
-                .assertIsDisplayed()
+            rule.composeRule.apply {
+                setContent {
+                    VerifyScopeSampleScreen()
+                }
+                // log scope.launch
+                onNode(hasText("sample"))
+                    .assertIsDisplayed()
 
 //            ShadowLooper.runUiThreadTasksIncludingDelayedTasks() // no effect
-            println("before advance")
-            testDispatcher.scheduler.advanceUntilIdle() // advance delay in viewModelScope
-            // log viewModelScope launch, viewModelScope reach to end
-            println("before advance test scheduler")
-            rule.composeRule.mainClock.advanceTimeBy(2000) // advance delay in rememberCoroutineScope
-            // log scope reach to end
-            println("end")
+                println("before advance")
+                testDispatcher.scheduler.advanceUntilIdle() // advance delay in viewModelScope
+                // log viewModelScope launch, viewModelScope reach to end
+                println("before advance test scheduler")
+                mainClock.advanceTimeBy(2000) // advance delay in rememberCoroutineScope
+                // log scope reach to end
+                println("end")
+            }
         }
 
         Dispatchers.resetMain()
@@ -297,89 +307,71 @@ class SampleScreenTest {
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
     @Test
     fun verify_pull_to_refresh() {
-        rule.composeRule.setContent {
-            SamplePullToRefresh()
-        }
+        rule.composeRule.apply {
+            setContent {
+                SamplePullToRefresh()
+            }
 
-        // before refresh
-        rule.composeRule.also {
-            println(it.onRoot().printToString())
-        } // exist progress node
-        rule.composeRule.onRoot()
-            .captureRoboImage()
+            // before refresh
+            println(onRoot().printToString()) // exist progress node
+            onRoot().captureRoboImage()
 
-        // pull to refresh
-        rule.composeRule
-            .onRoot()
-            .performTouchInput {
+            // pull to refresh
+            onRoot().performTouchInput {
                 swipeDown(
                     startY = visibleSize.height * 2 / 5F,
                     endY = visibleSize.height * 4 / 5F,
                 )
             }
 
-        // refreshing
-        rule.composeRule.also {
-            println(it.onRoot().printToString())
-        }
-        // log refreshing
-        rule.composeRule.onRoot()
-            .captureRoboImage()
+            // refreshing
+            println(onRoot().printToString())
+            // log refreshing
+            onRoot().captureRoboImage()
 
-        rule.composeRule.mainClock.advanceTimeBy(2000) // advance delay
+            mainClock.advanceTimeBy(2000) // advance delay
 
-        // log refresh end
-        // after refresh
-        rule.composeRule.also {
-            println(it.onRoot().printToString())
+            // log refresh end
+            // after refresh
+            println(onRoot().printToString())
+            onRoot().captureRoboImage()
         }
-        rule.composeRule.onRoot()
-            .captureRoboImage()
     }
 
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
     @Test
     fun verify_pull_to_refresh_animation() {
-        rule.composeRule.setContent {
-            SamplePullToRefresh()
-        }
+        rule.composeRule.apply {
+            setContent {
+                SamplePullToRefresh()
+            }
 
-        // before refresh
-        rule.composeRule.also {
-            println(it.onRoot().printToString())
-        } // exist progress node
-        rule.composeRule.onRoot()
-            .captureRoboImage()
+            // before refresh
+            println(onRoot().printToString()) // exist progress node
+            onRoot().captureRoboImage()
 
-        rule.composeRule.mainClock.autoAdvance = false
-        // pull to refresh
-        rule.composeRule
-            .onRoot()
-            .performTouchInput {
+            mainClock.autoAdvance = false
+            // pull to refresh
+            onRoot().performTouchInput {
                 swipeDown(
                     startY = visibleSize.height * 2 / 5F,
                     endY = visibleSize.height * 4 / 5F,
                 )
             }
-        // アニメーションはpullとローディングでひと続きだから、最初からautoAdvance=falseにしないといけない
-        rule.composeRule.mainClock.advanceTimeBy(1000) // advance delay in
-        // refreshing
-        rule.composeRule.also {
-            println(it.onRoot().printToString())
+            // アニメーションはpullとローディングでひと続きだから、最初からautoAdvance=falseにしないといけない
+            mainClock.advanceTimeBy(1000) // advance delay in
+            // refreshing
+            println(onRoot().printToString())
+            // log refreshing
+            onRoot().captureRoboImage()
+
+            mainClock.advanceTimeBy(2000) // advance delay
+
+
+            // log refresh end
+            // after refresh
+            println(onRoot().printToString())
+            onRoot().captureRoboImage()
         }
-        // log refreshing
-        rule.composeRule.onRoot()
-            .captureRoboImage()
-
-        rule.composeRule.mainClock.advanceTimeBy(2000) // advance delay
-
-
-        // log refresh end
-        // after refresh
-        rule.composeRule.also {
-            println(it.onRoot().printToString())
-        }
-        rule.composeRule.onRoot()
-            .captureRoboImage()
     }
 }

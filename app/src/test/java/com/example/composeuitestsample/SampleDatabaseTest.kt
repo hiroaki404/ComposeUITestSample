@@ -133,22 +133,24 @@ class SampleDatabaseTest {
     fun verify_database_query() = runTest(testDispatcher) {
         birdRepository.insertBirds(Bird("1", "bird1", "red"))
 
-        rule.composeRule.setContent {
-            val state by viewModel.birdsByQuery.collectAsState()
+        rule.composeRule.apply {
+            setContent {
+                val state by viewModel.birdsByQuery.collectAsState()
 
-            LaunchedEffect(Unit) {
-                viewModel.fetchBirdsByQuery()
+                LaunchedEffect(Unit) {
+                    viewModel.fetchBirdsByQuery()
+                }
+
+                if (state?.size == 1) {
+                    Text("loaded")
+                }
             }
 
-            if (state?.size == 1) {
-                Text("loaded")
-            }
+            testDispatcher.scheduler.advanceTimeBy(1000)
+            testDispatcher.scheduler.runCurrent()
+            onNode(isRoot())
+                .assertIsDisplayed()
         }
-
-        testDispatcher.scheduler.advanceTimeBy(1000)
-        testDispatcher.scheduler.runCurrent()
-        rule.composeRule.onNode(isRoot())
-            .assertIsDisplayed()
     }
 
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
@@ -156,24 +158,26 @@ class SampleDatabaseTest {
     fun verify_database_flow() = runTest(testDispatcher) {
         birdRepository.insertBirds(Bird("1", "bird1", "red"))
 
-        rule.composeRule.setContent {
-            val state by viewModel.birds.collectAsState()
+        rule.composeRule.apply {
+            setContent {
+                val state by viewModel.birds.collectAsState()
 
-            if (state?.size == 1) {
-                Text("loaded")
+                if (state?.size == 1) {
+                    Text("loaded")
+                }
             }
+            testDispatcher.scheduler.runCurrent()
+            onNode(isRoot())
+                .assertIsDisplayed()
         }
 
-        testDispatcher.scheduler.runCurrent()
-        rule.composeRule.onNode(isRoot())
-            .assertIsDisplayed()
     }
 
 }
 
 class SampleViewModel @Inject constructor(private val birdRepository: BirdRepository) :
     ViewModel() {
-    var _birdsByQuery: MutableStateFlow<List<Bird>?> = MutableStateFlow(null)
+    private var _birdsByQuery: MutableStateFlow<List<Bird>?> = MutableStateFlow(null)
     val birdsByQuery: StateFlow<List<Bird>?> = _birdsByQuery
 
     fun fetchBirdsByQuery() {
